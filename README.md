@@ -1,2 +1,2 @@
-# dynamite_daemon_core
+# dynamited core packages
 Common packages used by the Dynamite daemon
