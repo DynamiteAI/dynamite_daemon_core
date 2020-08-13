@@ -6,6 +6,7 @@ import (
 	"time"
 	"dynamite_daemon_core/pkg/logging"
 	"os"
+	"fmt"
 )
 
 type Job func(ctx context.Context, log *logging.Entry, exit *chan []byte)
@@ -57,15 +58,17 @@ func (s *Scheduler) process(ctx context.Context, j Job, log *logging.Entry, inte
 	}
 }
 
-// Function used by managerd packages to defer cleanup of their things 
-func Cleanup(pkg string, log *logging.Entry, logger *logging.Logger, exit *chan []byte, worker *Scheduler){
+// Function used by dynamited packages to defer cleanup of their things 
+func Cleanup(pkg string, loggers []*logging.Logger, exit *chan []byte, worker *Scheduler){
 	for {
 		select {
 		case msg := <-*exit:
-			log.WithField("error_msg", string(msg)).Errorf("%s_exiting", pkg)
-			if file, ok := logger.Out.(*os.File); ok {
-				file.Sync()
-				file.Close()
+			fmt.Printf("%s is exiting. Error message: %s", pkg, string(msg))
+			for _, v := range loggers {
+				if file, ok := v.Out.(*os.File); ok {
+					file.Sync()
+					file.Close()
+				}
 			}
 			worker.Stop() 
 		}

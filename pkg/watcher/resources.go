@@ -30,40 +30,39 @@ var (
 )
 
 type EngineStats struct {
-    Engine		string 	`json:"engine"`
-    ProcessCnt	int32	`json:"proc_cnt"`
-    ThreadCnt	int32	`json:"thread_cnt"`
-    CPU			float64	`json:"pct_cpu"`
-    RAM			float32	`json:"pct_ram"`
-    Files		int	    `json:"open_files"`
+    Engine		string 	    `json:"engine"`
+    ProcessCnt	int32	    `json:"proc_cnt"`
+    ThreadCnt	int32	    `json:"thread_cnt"`
+    CPU			float64	    `json:"pct_cpu"`
+    RAM			float32	    `json:"pct_ram"`
+    Files		int	        `json:"open_files"`
 }
 
 type ProcStats struct {
-    Engine		string 	`json:"engine"`
-    ProcName    string  `json:"proc_name"`
-    NodeId      string  `json:"node_id"`
-    PID			int32	`json:"pid"`
-    PPID		int32	`json:"ppid"`
-    CPUPct		float64	`json:"pct_cpu"`
-    RAMPct		float32	`json:"pct_ram"`
-    Files		int	`json:"open_files"`
-    Threads     int `json:"threads"`
+    Engine		string 	                `json:"engine"`
+    ProcName    string                  `json:"proc_name"`
+    NodeId      string                  `json:"node_id"`
+    PID			int32	                `json:"pid"`
+    PPID		int32	                `json:"ppid"`
+    CPUPct		float64	                `json:"pct_cpu"`
+    RAMPct		float32	                `json:"pct_ram"`
+    Files		int	                    `json:"open_files"`
+    Threads     int                     `json:"threads"`
     Memory		*process.MemoryInfoStat `json:"memory"`
-    CPU			*cpu.TimesStat `json:"cpu"`
+    CPU			*cpu.TimesStat          `json:"cpu"`
 }
 
 type ThreadStats struct {
-    Engine		string 	`json:"engine"`
-    ProcName    string  `json:"proc_name"`
-    NodeId      string  `json:"node_id"`
-    PID			int32			`json:"pid"`
-    PPID		int32			`json:"ppid"`
-    ThreadID    int32           `json:"thread_id"`
-    PctIdle     float64 `json:"pct_idle"`
-    PctBusy     float64 `json:"pct_busy"`
-    TotalTime   float64 `json:"total_time"`
-    CPU			*cpu.TimesStat 	`json:"cpu"`
-    //Memory		*process.MemoryInfoStat	`json:"memory"`
+    Engine		string 	                `json:"engine"`
+    ProcName    string                  `json:"proc_name"`
+    NodeId      string                  `json:"node_id"`
+    PID			int32			        `json:"pid"`
+    PPID		int32			        `json:"ppid"`
+    ThreadID    int32                   `json:"thread_id"`
+    PctIdle     float64                 `json:"pct_idle"`
+    PctBusy     float64                 `json:"pct_busy"`
+    TotalTime   float64                 `json:"total_time"`
+    CPU			*cpu.TimesStat 	        `json:"cpu"`
 }
 
 type AgentResourceReport struct {
@@ -232,8 +231,6 @@ func ThreadSummary(procs []*process.Process, name string)(ts []map[string]interf
                     p.PPID = pp 
                 }
                 p.CPU = thrd
-                p.GetPctIdle()
-                
                 ts = append(ts, common.StructToMap(p))
             }
         } 

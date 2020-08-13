@@ -3,6 +3,7 @@ package watcher
 import (
 	"context"
 	"time"
+	"fmt"
 
 	// Dynamite
 	"dynamite_daemon_core/pkg/logging"
@@ -20,10 +21,7 @@ var (
 
 // Init is called explicitly
 func Init(ctx context.Context) {
-	log, logger := logging.Configure("watcher")
-	compName := map[string]interface{}{
-		"component" : "",
-	}
+	var loggers []*logging.Logger
 
 	interval := 60 * time.Second
 	worker := NewScheduler()
@@ -32,21 +30,21 @@ func Init(ctx context.Context) {
 		if err == nil && watchInt != 0 {
 			interval = watchInt
 		} else {
-			log.WithField("error_msg", err).Error("invalid_watcher_interval", err)
+			fmt.Println("Invalid Watcher interval:", err)
 			
 		}
 	}
 
 	if conf.Conf.HasRole("agent") {
 		// run Agent monitoring tasks 
-		compName["component"] = "agent"
-		worker.Add(ctx, WatchAgent, &log, interval, &quitting)
-		
+		alog, alogger := logging.Configure("agent")
+		worker.Add(ctx, WatchAgent, &alog, interval, &quitting)
+		loggers = append(loggers, &alogger)
 	}
 	running = worker.Count()
 	
 	go keepWatch()
-	go Cleanup("watcher", &log, &logger, &exit, worker)
+	go Cleanup("watcher", loggers, &exit, worker)
 	return
 }
 
