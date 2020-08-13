@@ -23,6 +23,7 @@ type Logger struct {
 
 var (
 	LogDir = ""
+	DefaultLogDir = "/var/log/dynamite/dynamited"
 )
 
 // Try to use or create the provided logging dir 
@@ -39,23 +40,30 @@ func LogDirIsUsable(s string)(bool){
 	return true 
 }
 
+func MakeDefLogDir()(bool) {
+	if LogDirIsUsable(DefaultLogDir) {
+		LogDir = DefaultLogDir
+		return true
+	} else {
+		fmt.Println("Unable to create default logging directory.")
+	}
+	return false
+}
+
 func Init()(bool){
 	// Ensure the log directory exists, try to create it if not 
 	if conf.Conf.LogDir != "" {
 		if LogDirIsUsable(conf.Conf.LogDir) {
 			LogDir = conf.Conf.LogDir
 			return true
+		} else {
+			fmt.Println("Unable to use configured logging directory, attempting to use", DefaultLogDir)
+			return MakeDefLogDir()
 		}
 	} else {
-		fmt.Println("No logging directory configured, attempting to use default /var/dynamite/managerd/logs")
-		// try a default path
-		if LogDirIsUsable("/var/dynamite/managerd/logs") {
-			LogDir = "/var/dynamite/managerd/logs"
-			return true
-		} else {
-			fmt.Println("Unable to configure logging. Exiting.")
-			return false
-		}
+		fmt.Println("No logging directory configured, attempting to use", DefaultLogDir)
+		// try the default path
+		return MakeDefLogDir()
 	}
 	return false
 }

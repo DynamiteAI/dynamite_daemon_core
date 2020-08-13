@@ -12,17 +12,18 @@ var (
 
 type Config struct {
     Watcher struct {
-        Interval    string     `yaml:"interval"` //, envconfig:"SERVER_PORT"`
-        Mode        string  `yaml:"mode"` // APP,PROCESS,THREAD,ALL
+        Interval    string     `yaml:"interval"`
+        Mode        string  `yaml:"mode"` 
+        Enabled     bool  `yaml:"enabled"` 
     } `yaml:"watcher"`
     Scanner struct {
-        Targets []string `yaml:"targets"` //, envconfig:"DB_USERNAME"`
+        Targets []string `yaml:"targets"`
         Interval string `yaml:"interval"`
         Directory string `yaml:"directory"`
         Exclusions []string `yaml:"exclusions"`
         Opts []string `yaml:"opts"`
     } `yaml:"scanner"`
-    Roles []string `yaml:"roles"`       //, envconfig:"DYNMGR_ROLES"
+    Roles []string `yaml:"roles"`      
     LogLevel string `yaml:"log_level"`
     LogDir string `yaml:"log_dir"`
 }

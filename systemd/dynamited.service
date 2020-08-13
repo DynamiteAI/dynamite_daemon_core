@@ -1,0 +1,16 @@
+[Unit]
+Description=Dynamite Daemon Manager
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment="DYND_CONFIG=-c /etc/dynamite/dynamited/config.yml" 
+PIDFile=/var/run/dynamite/dynamited/dynamited.pid
+ExecStart=/opt/dynamite/dynamited/bin/dynamited $DYND_CONFIG
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=dynamited
+
+[Install]
+WantedBy=multi-user.target

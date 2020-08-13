@@ -1,27 +1,26 @@
 #!/usr/bin/sh
-echo "Installing managerd..."
+echo "Installing dynamited..."
 # app directories
-MNGRD_LOGS="/var/dynamite/managerd/logs"
-MNGRD_APP="/opt/dynamite/managerd/bin"
-MNGRD_CONF="/etc/dynamite/managerd"
-MNGRD_PID="/var/run/dynamite/managerd"
+DYND_LOGS="/var/dynamite/dynamited/logs"
+DYND_APP="/opt/dynamite/dynamited/bin"
+DYND_CONF="/etc/dynamite/dynamited"
+DYND_PID="/var/run/dynamite/dynamited"
 
 # create dirs 
 echo "Creating application directories..."
-mkdir -p $MNGRD_APP
-mkdir -p $MNGRD_CONF
-mkdir -p $MNGRD_LOGS
-mkdir -p $MNGRD_PID
+mkdir -p $DYND_APP
+mkdir -p $DYND_CONF
+mkdir -p $DYND_LOGS
+mkdir -p $DYND_PID
 
 # place files 
 echo "Installing application files..."
-cp ../cmd/managerd $MNGRD_APP/.
-chmod +x $MNGRD_APP/managerd
-cp ../internal/conf/config.yml $MNGRD_CONF/.
-cp ../etc/managerd.service /etc/systemd/system/.
+cp ../pkg/conf/config.yml $DYND_CONF/.
+cp ../systemd/dynamited.service /etc/systemd/system/.
 
-# set up managerd service 
-echo "Enabling managerd service..."
+# set up dynamited service 
+echo "Enabling dynamited service..."
 systemctl daemon-reload 
-systemctl enable managerd.service
+systemctl enable dynamited.service
 
+echo "Dynamited service installed. Run `systemctl start dynamited` to start."
