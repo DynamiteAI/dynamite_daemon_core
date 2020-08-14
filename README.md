@@ -2,4 +2,4 @@
 
 
 # dynamited core packages
-Common packages used by the Dynamite daemon
+These are common packages used by Dynamite Daemon.
