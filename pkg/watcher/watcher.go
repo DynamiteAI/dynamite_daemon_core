@@ -35,6 +35,10 @@ func Init(ctx context.Context) {
 		}
 	}
 
+	hlog, hlogger := logging.Configure("health")
+	worker.Add(ctx, WatchHealth, &hlog, interval, &quitting)
+	loggers = append(loggers, &hlogger)
+
 	if conf.Conf.HasRole("agent") {
 		// run Agent monitoring tasks 
 		alog, alogger := logging.Configure("agent")
