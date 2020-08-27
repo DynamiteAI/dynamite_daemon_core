@@ -1,8 +1,8 @@
 package watcher
 
 import (
-	"strings"
 	"context"
+	"strings"
 
 	// Dynamite
 	"dynamite_daemon_core/pkg/common"
@@ -14,7 +14,7 @@ var (
 	fails = 0
 )
 
-// Run Agent monitoring tasks
+// WatchAgent starts Dynamite Agent monitoring tasks
 func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) {
 
 	// start := time.Now()
@@ -41,7 +41,7 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 				e = strings.Split(e, "::")[1]
 				ifaces[e] = struct{}{}
 			}
-		}	
+		}
 	}
 
 	if len(ifaces) > 0 {
@@ -51,19 +51,19 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 			if ifrpt != nil {
 				rptmap := common.StructToMap(ifrpt)
 				log.WithFields(rptmap).Info("interface_stats")
-				fails = 0 
+				fails = 0
 			}
 		}
 	} else {
 		log.Debug("Unable to retrieve inspection interfaces. Trying again.")
-		fails += 1
+		fails++
 	}
 
 	if fails > 5 {
 		*quitting <- []byte("Failed to identify inspection interfaces for 5 consecutive intervals.")
 	}
 
-	// 
+	//
 	if conf.Conf.Watcher.Mode != "" {
 		rr := NewRR()
 		switch conf.Conf.Watcher.Mode {
@@ -71,50 +71,50 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 			//engine
 			rr.RptAEngines()
 			if len(rr.EngRpts) > 0 {
-				for _,v := range rr.EngRpts {
+				for _, v := range rr.EngRpts {
 					log.WithFields(v).Info("engine_stats")
 				}
-			}					
+			}
 		case "process":
 			//engine
 			rr.RptAEngines()
 			if len(rr.EngRpts) > 0 {
-				for _,v := range rr.EngRpts {
+				for _, v := range rr.EngRpts {
 					log.WithFields(v).Info("engine_stats")
 				}
 			}
 			//proc
 			rr.RptAProcs()
 			if len(rr.ProcRpts) > 0 {
-				for _,v := range rr.ProcRpts {
+				for _, v := range rr.ProcRpts {
 					log.WithFields(v).Info("proc_stats")
 				}
 			}
-			
+
 		case "thread":
 			//engine
 			rr.RptAEngines()
 			if len(rr.EngRpts) > 0 {
-				for _,v := range rr.EngRpts {
+				for _, v := range rr.EngRpts {
 					log.WithFields(v).Info("engine_stats")
 				}
 			}
 			//proc
 			rr.RptAProcs()
 			if len(rr.ProcRpts) > 0 {
-				for _,v := range rr.ProcRpts {
+				for _, v := range rr.ProcRpts {
 					log.WithFields(v).Info("proc_stats")
 				}
 			}
 			//thread
 			rr.RptAThreads()
 			if len(rr.ThrdRpts) > 0 {
-				for _,v := range rr.ThrdRpts {
+				for _, v := range rr.ThrdRpts {
 					log.WithFields(v).Info("thread_stats")
 				}
 			}
 		}
-	} 
+	}
 
 	return
 }

@@ -3,23 +3,24 @@
 package watcher
 
 import (
-	"gopkg.in/yaml.v2"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
-	"errors"
-	"fmt"
+
+	"gopkg.in/yaml.v2"
 )
 
-// Struct to hold Suricata threading settings
+// SuriConf is a struct containing Suricata's threading settings
 type SuriConf struct {
-	MgrCPUS     	[]int   	`json:"suri_mgr_cpus"`
-	RcvCPUS     	[]int   	`json:"suri_rcv_cpus"`
-	WrkCPUS     	[]int   	`json:"suri_wrk_cpus"`
-	DTR         	float64 	`json:"suri_dtr"`
-	UseAffinity 	bool    	`json:"suri_pin_cpus"`
-	RunMode     	string  	`json:"suri_runmode"`
-	Ifaces			[]string 	`json:"suri_ifaces"`
+	MgrCPUS     []int    `json:"suri_mgr_cpus"`
+	RcvCPUS     []int    `json:"suri_rcv_cpus"`
+	WrkCPUS     []int    `json:"suri_wrk_cpus"`
+	DTR         float64  `json:"suri_dtr"`
+	UseAffinity bool     `json:"suri_pin_cpus"`
+	RunMode     string   `json:"suri_runmode"`
+	Ifaces      []string `json:"suri_ifaces"`
 }
 
 // Variables used in this package
@@ -27,7 +28,7 @@ var (
 	SuriConfFile = "/etc/dynamite/suricata/suricata.yaml"
 )
 
-// Function to parse threading settings from Suricata yaml
+// GetSuriConf retrieves threading settings from Suricata yaml
 func GetSuriConf() (*SuriConf, error) {
 	var sconf SuriConf
 	if _, err := os.Stat(SuriConfFile); os.IsNotExist(err) {
@@ -37,7 +38,7 @@ func GetSuriConf() (*SuriConf, error) {
 
 	scfile, err := ioutil.ReadFile(SuriConfFile)
 	if err != nil {
-		msg := fmt.Sprintf("Failed to open Suricata config file, e: %v")
+		msg := fmt.Sprintf("Failed to open Suricata config file, e: %v", err)
 		return &sconf, errors.New(msg)
 	}
 
@@ -81,7 +82,7 @@ func GetSuriConf() (*SuriConf, error) {
 								if k.(string) == "cpu" {
 									if reflect.TypeOf(v).String() == "[]interface {}" {
 										for c := range v.([]interface{}) {
-											sconf.MgrCPUS = append(sconf.MgrCPUS, c)									
+											sconf.MgrCPUS = append(sconf.MgrCPUS, c)
 										}
 									} else if reflect.TypeOf(v).String() == "int" {
 										sconf.MgrCPUS = append(sconf.MgrCPUS, v.(int))
@@ -96,20 +97,20 @@ func GetSuriConf() (*SuriConf, error) {
 									if reflect.TypeOf(v).String() == "[]interface {}" {
 										for c := range v.([]interface{}) {
 											sconf.RcvCPUS = append(sconf.RcvCPUS, c)
-											}
 										}
-									} else if reflect.TypeOf(v).String() == "int" {
-										sconf.RcvCPUS = append(sconf.RcvCPUS, v.(int))
 									}
+								} else if reflect.TypeOf(v).String() == "int" {
+									sconf.RcvCPUS = append(sconf.RcvCPUS, v.(int))
 								}
 							}
+						}
 						if k.(string) == "worker-cpu-set" {
 							for k, v := range v.(map[interface{}]interface{}) {
 								if k.(string) == "cpu" {
 									if reflect.TypeOf(v).String() == "[]interface {}" {
 										for c := range v.([]interface{}) {
 											sconf.WrkCPUS = append(sconf.WrkCPUS, c)
-											}
+										}
 									} else if reflect.TypeOf(v).String() == "int" {
 										sconf.WrkCPUS = append(sconf.WrkCPUS, v.(int))
 									}

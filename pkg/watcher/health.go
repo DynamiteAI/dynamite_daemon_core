@@ -2,99 +2,83 @@ package watcher
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
-	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
+	"github.com/shirou/gopsutil/mem"
 
-	. "dynamite_daemon_core/pkg/common"
+	"dynamite_daemon_core/pkg/common"
 	//"dynamite_daemon_core/pkg/conf"
 	"dynamite_daemon_core/pkg/logging"
 )
 
-// 
+// WatchHealth logs resource utilization stats to health.jsonl
 func WatchHealth(ctx context.Context, log *logging.Entry, quitting *chan []byte) {
 
 	// start := time.Now()
 	hinfo, err := host.Info()
 	if err != nil {
-		fmt.Println("Unable to retrieve host information.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return
+		log.WithField("error_msg", err.Error()).Error("host_info_error")
 	} else {
-		log.WithFields(StructToMap(hinfo)).Info("host_info")	
+		log.WithFields(common.StructToMap(hinfo)).Info("host_info")
 	}
-
 	// CPU STATS
-	ccount, err:= cpu.Counts(true)
+	ccount, err := cpu.Counts(true)
 	if err != nil {
-		fmt.Println("Unable to retrieve the cpu core count.")
-		*quitting <- []byte("Health watcher exiting!!")		
-		return 
-	} 
+		log.WithField("error_msg", err.Error()).Error("cpu_core_cnt_error")
+	}
 
 	lavg, err := load.Avg()
 	if err != nil {
-		fmt.Println("Unable to retrieve the cpu load average.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return
+		log.WithField("error_msg", err.Error()).Error("cpu_load_avg_error")
 	} else {
 		if ccount > 0 {
-			log.WithFields(StructToMap(lavg)).WithField("cpu_cores", ccount).Info("cpu_load_avg")	
+			log.WithFields(common.StructToMap(lavg)).WithField("cpu_cores", ccount).Info("cpu_load_avg")
 		} else {
-			log.WithFields(StructToMap(lavg)).Info("cpu_load_avg")
+			log.WithFields(common.StructToMap(lavg)).Info("cpu_load_avg")
 		}
 	}
 
 	ctimes, err := cpu.Times(true)
 	if err != nil {
-		fmt.Println("Unable to retrieve the cpu times.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return 
+		log.WithField("error_msg", err.Error()).Error("cpu_times_error")
 	} else {
 		for _, v := range ctimes {
-			log.WithFields(StructToMap(v)).Info("cpu_times")
+			log.WithFields(common.StructToMap(v)).Info("cpu_times")
 		}
 	}
-		
-	// Memory 
+
+	// Memory
 	mem, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Println("Unable to retrieve RAM stats.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return 
+		log.WithField("error_msg", err.Error()).Error("ram_stats_error")
 	} else {
-		log.WithFields(StructToMap(mem)).Info("memory_stats")
+		log.WithFields(common.StructToMap(mem)).Info("memory_stats")
 	}
 
 	// Disk
-	vutil, err := disk.Usage("/var/dynamite")
+	vpath := "/var/log/dynamite"
+	vutil, err := disk.Usage(vpath)
 	if err != nil {
-		fmt.Println("Unable to retrieve disk usage stats.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return 		
-	} else { 
-		log.WithFields(StructToMap(vutil)).WithField("path", "/var/dynamite").Info("disk_usage")
+		log.WithField("error_msg", err.Error()).Error("disk_stats_error")
+	} else {
+		log.WithFields(common.StructToMap(vutil)).WithField("path", vpath).Info("disk_usage")
 	}
 
-	outil, err := disk.Usage("/opt/dynamite")
+	opath := "/opt/dynamite"
+	outil, err := disk.Usage(opath)
 	if err != nil {
-		fmt.Println("Unable to retrieve disk usage stats.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return 		
-	} else { 
-		log.WithFields(StructToMap(outil)).WithField("path", "/opt/dynamite").Info("disk_usage")
+		log.WithField("error_msg", err.Error()).Error("disk_stats_error")
+	} else {
+		log.WithFields(common.StructToMap(outil)).WithField("path", opath).Info("disk_usage")
 	}
 
 	sutil, err := disk.Usage("/")
 	if err != nil {
-		fmt.Println("Unable to retrieve disk usage stats.")
-		*quitting <- []byte("Health watcher exiting!!")
-		return 		
-	} else { 
-		log.WithFields(StructToMap(sutil)).WithField("path", "/").Info("disk_usage")
+		log.WithField("error_msg", err.Error()).Error("disk_stats_error")
+	} else {
+		log.WithFields(common.StructToMap(sutil)).WithField("path", "/").Info("disk_usage")
 	}
 }
