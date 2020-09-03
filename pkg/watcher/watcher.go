@@ -63,7 +63,7 @@ func keepWatch() {
 	for {
 		select {
 		case msg := <-quitting:
-			log.WithField("error_msg", msg).Error("watcher_job_failed")
+			logging.LogEntry.WithField("pkg", "watcher").WithField("error_msg", msg).Error("watcher_job_failed")
 			running = running - 1
 			if running <= 0 {
 				exit <- []byte("all watcher jobs failed")

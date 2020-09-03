@@ -34,7 +34,7 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 
 	zeek, err := GetZeekConf()
 	if err != nil {
-		log.Error(err)
+		logging.LogEntry.WithField("pkg", "agent").Error(err)
 	} else {
 		if zeek.Ifaces != nil && len(zeek.Ifaces) > 0 {
 			for _, e := range zeek.Ifaces {
@@ -55,7 +55,7 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 			}
 		}
 	} else {
-		log.Debug("Unable to retrieve inspection interfaces. Trying again.")
+		logging.LogEntry.WithField("pkg", "agent").Debug("Unable to retrieve inspection interfaces. Trying again.")
 		fails++
 	}
 
