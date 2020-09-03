@@ -3,31 +3,33 @@
 package watcher
 
 import (
-	"strconv"
-	"strings"
 	"errors"
 	"fmt"
-	
+	"strconv"
+	"strings"
+
 	"gopkg.in/ini.v1"
 )
 
+// ZeekConf is a struct that contains Zeek's network interface and processor settings
 type ZeekConf struct {
-	MgrCPUS  []int  `json:"zeek_mgr_cpus"`
-	PrxCPUS  []int  `json:"zeek_prx_cpus"`
-	WrkCPUS  []int  `json:"zeek_wrk_cpus"`
-	WrkProcs int    `json:"zeek_lb_procs"`
-	LBMeth   string `json:"zeek_lb_method"`
+	MgrCPUS  []int    `json:"zeek_mgr_cpus"`
+	PrxCPUS  []int    `json:"zeek_prx_cpus"`
+	WrkCPUS  []int    `json:"zeek_wrk_cpus"`
+	WrkProcs int      `json:"zeek_lb_procs"`
+	LBMeth   string   `json:"zeek_lb_method"`
 	Ifaces   []string `json:"zeek_ifaces"`
 }
 
-var ZeekNodeConfFile string = "/opt/dynamite/zeek/etc/node.cfg"
+var zeekNodeConfig string = "/opt/dynamite/zeek/etc/node.cfg"
 
+// GetZeekConf parses the Zeek node config and returns a populated ZeekConf struct
 func GetZeekConf() (*ZeekConf, error) {
 	// Initialize a new container
 	var zconf ZeekConf
 
 	// open file as ini
-	cfg, err := ini.Load(ZeekNodeConfFile)
+	cfg, err := ini.Load(zeekNodeConfig)
 	if err != nil {
 		msg := fmt.Sprintf("Fail to read Zeek conf file: %v", err)
 		return &zconf, errors.New(msg)
@@ -49,15 +51,15 @@ func GetZeekConf() (*ZeekConf, error) {
 				}
 			}
 
-			if lb_procs, ok := k["lb_procs"]; ok {
-				v, err := strconv.Atoi(lb_procs)
+			if LBProcs, ok := k["lb_procs"]; ok {
+				v, err := strconv.Atoi(LBProcs)
 				if err == nil {
 					zconf.WrkProcs = v
 				}
 			}
 
-			if lb_meth, ok := k["lb_method"]; ok {
-				zconf.LBMeth = lb_meth
+			if LBMethod, ok := k["lb_method"]; ok {
+				zconf.LBMeth = LBMethod
 			}
 
 			if iface, ok := k["interface"]; ok {
