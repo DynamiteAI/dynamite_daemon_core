@@ -69,11 +69,12 @@ type ThreadStats struct {
 
 // AgentResourceReport is a container for managing
 type AgentResourceReport struct {
-	ZeekProcs []*process.Process       `json:"zeek_procs"`
-	SuriProcs []*process.Process       `json:"suri_procs"`
-	EngRpts   []map[string]interface{} `json:"engine_stats"`
-	ProcRpts  []map[string]interface{} `json:"proc_stats"`
-	ThrdRpts  []map[string]interface{} `json:"thread_stats"`
+	ZeekProcs     []*process.Process       `json:"zeek_procs"`
+	SuriProcs     []*process.Process       `json:"suri_procs"`
+	FilebeatProcs []*process.Process       `json:"filebeat_procs"`
+	EngRpts       []map[string]interface{} `json:"engine_stats"`
+	ProcRpts      []map[string]interface{} `json:"proc_stats"`
+	ThrdRpts      []map[string]interface{} `json:"thread_stats"`
 }
 
 // NewRR generates a new AgentResourceReport instance
@@ -94,6 +95,9 @@ func NewRR() (rpt AgentResourceReport) {
 			case "zeek":
 				// found a zeek 3.x proc
 				rpt.ZeekProcs = append(rpt.ZeekProcs, p)
+			case "filebeat":
+				// found a filebeat proc
+				rpt.FilebeatProcs = append(rpt.FilebeatProcs, p)
 			}
 		}
 	}
@@ -156,7 +160,7 @@ func ProcSummary(procs []*process.Process, name string) (ps []map[string]interfa
 
 		if name == "zeek" {
 			p.NodeID = getZeekNodeName(proc)
-		} else if name == "suricata" {
+		} else if name == "suricata" || name == "filebeat" {
 			p.NodeID = "main"
 		}
 
@@ -210,7 +214,7 @@ func ThreadSummary(procs []*process.Process, name string) (ts []map[string]inter
 
 				if name == "zeek" {
 					p.NodeID = getZeekNodeName(proc)
-				} else if name == "suricata" {
+				} else if name == "suricata" || name == "filebeat" {
 					p.NodeID = "main"
 				}
 
@@ -239,6 +243,9 @@ func (rpt *AgentResourceReport) RptAEngines() {
 	if rpt.SuriProcs != nil && len(rpt.SuriProcs) > 0 {
 		rpt.EngRpts = append(rpt.EngRpts, EngSummary(rpt.SuriProcs, "suricata"))
 	}
+	if rpt.FilebeatProcs != nil && len(rpt.FilebeatProcs) > 0 {
+		rpt.EngRpts = append(rpt.EngRpts, EngSummary(rpt.FilebeatProcs, "filebeat"))
+	}
 	return
 }
 
@@ -249,6 +256,9 @@ func (rpt *AgentResourceReport) RptAProcs() {
 	}
 	if rpt.SuriProcs != nil && len(rpt.SuriProcs) > 0 {
 		rpt.ProcRpts = append(rpt.ProcRpts, ProcSummary(rpt.SuriProcs, "suricata")...)
+	}
+	if rpt.FilebeatProcs != nil && len(rpt.FilebeatProcs) > 0 {
+		rpt.ProcRpts = append(rpt.ProcRpts, ProcSummary(rpt.FilebeatProcs, "filebeat")...)
 	}
 	return
 }
@@ -264,6 +274,13 @@ func (rpt *AgentResourceReport) RptAThreads() {
 	}
 	if rpt.SuriProcs != nil && len(rpt.SuriProcs) > 0 {
 		for _, v := range ThreadSummary(rpt.SuriProcs, "suricata") {
+			if len(v) > 0 {
+				rpt.ThrdRpts = append(rpt.ThrdRpts, v)
+			}
+		}
+	}
+	if rpt.FilebeatProcs != nil && len(rpt.FilebeatProcs) > 0 {
+		for _, v := range ThreadSummary(rpt.FilebeatProcs, "filebeat") {
 			if len(v) > 0 {
 				rpt.ThrdRpts = append(rpt.ThrdRpts, v)
 			}
