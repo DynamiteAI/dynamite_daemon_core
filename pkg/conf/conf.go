@@ -8,12 +8,10 @@ import (
 )
 
 var (
-	// Conf holds dynamited's current configuration settings
-	Conf    Config
 	roleMap = map[string]string{
 		"agent":   "Inspects network traffic.",
 		"monitor": "Ingests and analyzes events.",
-		"scanner": "Fingerprints network devices.",
+		"probe":   "Probes network devices for asset fingerprinting.",
 	}
 )
 
@@ -24,7 +22,7 @@ type Config struct {
 		Mode     string `yaml:"mode"`
 		Enabled  bool   `yaml:"enabled"`
 	} `yaml:"watcher"`
-	Scanner struct {
+	Probe struct {
 		Targets    []string `yaml:"targets"`
 		Interval   string   `yaml:"interval"`
 		Directory  string   `yaml:"directory"`
@@ -46,29 +44,28 @@ func (c *Config) HasRole(s string) bool {
 	return false
 }
 
-// Load initializes the conf.Conf variable with settings from the config file
-func Load(s string) {
-	readFile(s, &Conf)
+// Load initializes a Conf instance with settings from the config file
+func Load(s string) (cfg *Config, err error) {
+	cfg, err = readFile(s, cfg)
+	return cfg, err
 }
 
-func readFile(s string, cfg *Config) {
+func readFile(s string, cfg *Config) (*Config, error) {
 	_, err := os.Stat(s)
 	if os.IsNotExist(err) {
-		fmt.Printf("Config file %v not found. Exiting.\n", s)
-		os.Exit(1)
+		return cfg, fmt.Errorf("config file %v not found", s)
 	}
 	f, ferr := os.Open(s)
 	if ferr != nil {
-		fmt.Printf("Unable to open config file %v. Exiting.\n", s)
-		os.Exit(1)
+		return cfg, fmt.Errorf("unable to open config file %v", s)
+
 	}
 	defer f.Close()
 
 	decoder := yaml.NewDecoder(f)
-	derr := decoder.Decode(cfg)
+	derr := decoder.Decode(&cfg)
 	if derr != nil {
-		fmt.Printf("Unable to parse config file %v. Exiting.\n", s)
-		os.Exit(1)
+		return cfg, fmt.Errorf("unable to parse config file %v", s)
 	}
 	rls := []string{}
 	if len(cfg.Roles) > 0 {
@@ -79,4 +76,5 @@ func readFile(s string, cfg *Config) {
 		}
 		cfg.Roles = rls
 	}
+	return cfg, nil
 }

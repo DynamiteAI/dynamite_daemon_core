@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 echo "Installing dynamited..."
 # app directories
 DYND_LOGS="/var/dynamite/dynamited/logs"
@@ -15,7 +15,7 @@ mkdir -p $DYND_PID
 
 # place files 
 echo "Installing application files..."
-cp ../pkg/conf/config.yml $DYND_CONF/.
+cp ../conf/config.yml $DYND_CONF/.
 cp ../systemd/dynamited.service /etc/systemd/system/.
 
 # set up dynamited service 

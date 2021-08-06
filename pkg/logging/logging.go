@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	//Dynamite
-	"dynamite_daemon_core/pkg/conf"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/conf"
 )
 
 type Entry struct {
@@ -46,49 +46,43 @@ func LogDirIsUsable(s string) bool {
 	return true
 }
 
-func MakeDefLogDir() bool {
+func makeDefLogDir() error {
 	if LogDirIsUsable(DefaultLogDir) {
 		LogDir = DefaultLogDir
-		return true
-	} else {
-		fmt.Println("Unable to create default logging directory.")
+		return nil
 	}
-	return false
+	return fmt.Errorf("unable to create default logging directory")
 }
 
-func Init() bool {
+func createDir(cfg *conf.Config) error {
 	// Ensure the log directory exists, try to create it if not
-	if conf.Conf.LogDir != "" {
-		if LogDirIsUsable(conf.Conf.LogDir) {
-			LogDir = conf.Conf.LogDir
-			return true
+	if cfg.LogDir != "" {
+		if LogDirIsUsable(cfg.LogDir) {
+			LogDir = cfg.LogDir
+			return nil
 		} else {
 			fmt.Println("Unable to use configured logging directory, attempting to use", DefaultLogDir)
-			return MakeDefLogDir()
+			return makeDefLogDir()
 		}
-	} else {
-		fmt.Println("No logging directory configured, attempting to use", DefaultLogDir)
-		// try the default path
-		return MakeDefLogDir()
 	}
-	return false
+	fmt.Println("No logging directory configured, attempting to use", DefaultLogDir)
+	return makeDefLogDir()
 }
 
-func Configure(s string) (Entry, Logger) {
+func Configure(s string, cfg *conf.Config) (Entry, Logger, error) {
 	log := logrus.New()
-	if conf.Conf.LogLevel != "" {
-		if v, err := logrus.ParseLevel(conf.Conf.LogLevel); err == nil {
+	if cfg.LogLevel != "" {
+		if v, err := logrus.ParseLevel(cfg.LogLevel); err == nil {
 			log.SetLevel(v)
 		} else {
-			log.Error("Invalid log_level setting in config file: ", conf.Conf.LogLevel)
+			return Entry{}, Logger{}, fmt.Errorf("invalid log_level setting in config file: %s", cfg.LogLevel)
 		}
 	}
 	clog := filepath.Join(LogDir, s+".jsonl")
 
 	LogFile, err := os.OpenFile(clog, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
-		fmt.Printf("Unable to open %s log file, e: %v.\n", s, err)
-		os.Exit(1)
+		return Entry{}, Logger{}, fmt.Errorf("unable to open %s log file, e: %v", s, err)
 	}
 	log.SetOutput(LogFile)
 	log.SetFormatter(&logrus.JSONFormatter{})
@@ -97,14 +91,22 @@ func Configure(s string) (Entry, Logger) {
 	e := log.WithFields(logrus.Fields{"source": s})
 
 	// return the new logger and pre-populated entry
-	return Entry{e}, Logger{log}
+	return Entry{e}, Logger{log}, nil
 }
 
 // SetupAppLogger creates the dynamited logger and stores pointers to the logger and logger.Entry
 // in global variables, LogEntry and Log. The variables can be used for threadsafe logging
 // to the dynamited.jsonl log file from any other dynamited packages.
-func SetupAppLogger() {
-	le, l := Configure("dynamited")
+func SetupAppLogger(cfg *conf.Config) error {
+	err := createDir(cfg)
+	if err != nil {
+		return err
+	}
+	le, l, err := Configure("dynamited", cfg)
+	if err != nil {
+		return err
+	}
 	LogEntry = &le
 	Log = &l
+	return nil
 }

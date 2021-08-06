@@ -9,13 +9,15 @@ import (
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/mem"
 
-	"dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/conf"
+
 	//"dynamite_daemon_core/pkg/conf"
-	"dynamite_daemon_core/pkg/logging"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/logging"
 )
 
 // WatchHealth logs resource utilization stats to health.jsonl
-func WatchHealth(ctx context.Context, log *logging.Entry, quitting *chan []byte) {
+func WatchHealth(ctx context.Context, log *logging.Entry, quitting *chan []byte, cfg *conf.Config) {
 
 	// start := time.Now()
 	hinfo, err := host.Info()

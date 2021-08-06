@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	// Dynamite
-	"dynamite_daemon_core/pkg/common"
-	"dynamite_daemon_core/pkg/conf"
-	"dynamite_daemon_core/pkg/logging"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/conf"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/logging"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 )
 
 // WatchAgent starts Dynamite Agent monitoring tasks
-func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) {
+func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte, cfg *conf.Config) {
 
 	// start := time.Now()
 	var ifaces map[string]struct{} = make(map[string]struct{})
@@ -64,9 +64,9 @@ func WatchAgent(ctx context.Context, log *logging.Entry, quitting *chan []byte) 
 	}
 
 	//
-	if conf.Conf.Watcher.Mode != "" {
+	if cfg.Watcher.Mode != "" {
 		rr := NewRR()
-		switch conf.Conf.Watcher.Mode {
+		switch cfg.Watcher.Mode {
 		case "engine":
 			//engine
 			rr.RptAEngines()

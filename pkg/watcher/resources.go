@@ -1,7 +1,7 @@
 package watcher
 
 import (
-	"dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/common"
 	"strings"
 
 	"github.com/shirou/gopsutil/cpu"

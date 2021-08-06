@@ -6,9 +6,9 @@ import (
 	"time"
 
 	// Dynamite
-	"dynamite_daemon_core/pkg/common"
-	"dynamite_daemon_core/pkg/conf"
-	"dynamite_daemon_core/pkg/logging"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/conf"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/logging"
 )
 
 var (
@@ -20,13 +20,13 @@ var (
 )
 
 // Init is called explicitly
-func Init(ctx context.Context) {
+func Init(ctx context.Context, cfg *conf.Config) error {
 	var loggers []*logging.Logger
 
 	interval := 60 * time.Second
 	worker := common.NewScheduler()
-	if conf.Conf.Watcher.Interval != "" {
-		watchInt, err := common.ParseDuration(conf.Conf.Watcher.Interval)
+	if cfg.Watcher.Interval != "" {
+		watchInt, err := common.ParseDuration(cfg.Watcher.Interval)
 		if err == nil && watchInt != 0 {
 			interval = watchInt
 		} else {
@@ -35,14 +35,20 @@ func Init(ctx context.Context) {
 		}
 	}
 
-	hlog, hlogger := logging.Configure("health")
-	worker.Add(ctx, WatchHealth, &hlog, interval, &quitting)
+	hlog, hlogger, err := logging.Configure("health", cfg)
+	if err != nil {
+		return err
+	}
+	worker.Add(ctx, WatchHealth, &hlog, interval, &quitting, cfg)
 	loggers = append(loggers, &hlogger)
 
-	if conf.Conf.HasRole("agent") {
+	if cfg.HasRole("agent") {
 		// run Agent monitoring tasks
-		alog, alogger := logging.Configure("agent")
-		worker.Add(ctx, WatchAgent, &alog, interval, &quitting)
+		alog, alogger, err := logging.Configure("agent", cfg)
+		if err != nil {
+			return err
+		}
+		worker.Add(ctx, WatchAgent, &alog, interval, &quitting, cfg)
 		loggers = append(loggers, &alogger)
 
 		// if pruning not disabled, add an Agent pruning job
@@ -53,7 +59,7 @@ func Init(ctx context.Context) {
 
 	go keepWatch()
 	go common.Cleanup("watcher", loggers, &exit, worker)
-	return
+	return nil
 }
 
 // keepWatch monitors the quitting channel for messages indicating a job is exiting early

@@ -2,14 +2,16 @@ package common
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"sync"
 	"time"
-	"dynamite_daemon_core/pkg/logging"
-	"os"
-	"fmt"
+
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/conf"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/logging"
 )
 
-type Job func(ctx context.Context, log *logging.Entry, exit *chan []byte)
+type Job func(ctx context.Context, log *logging.Entry, exit *chan []byte, cfg *conf.Config)
 
 type Scheduler struct {
 	wg            *sync.WaitGroup
@@ -23,18 +25,18 @@ func NewScheduler() *Scheduler {
 	}
 }
 
-// Count returns the number of scheduled jobs 
-func (s *Scheduler) Count()(int) {
+// Count returns the number of scheduled jobs
+func (s *Scheduler) Count() int {
 	return len(s.cancellations)
 }
 
 // Add starts goroutine which constantly calls provided job with interval delay
-func (s *Scheduler) Add(ctx context.Context, j Job, log *logging.Entry, interval time.Duration, quitting *chan []byte) {
+func (s *Scheduler) Add(ctx context.Context, j Job, log *logging.Entry, interval time.Duration, quitting *chan []byte, cfg *conf.Config) {
 	ctx, cancel := context.WithCancel(ctx)
 	s.cancellations = append(s.cancellations, cancel)
 
 	s.wg.Add(1)
-	go s.process(ctx, j, log, interval, quitting)
+	go s.process(ctx, j, log, interval, quitting, cfg)
 }
 
 // Stop cancels all running jobs
@@ -45,12 +47,12 @@ func (s *Scheduler) Stop() {
 	s.wg.Wait()
 }
 
-func (s *Scheduler) process(ctx context.Context, j Job, log *logging.Entry, interval time.Duration, quitting *chan []byte) {
+func (s *Scheduler) process(ctx context.Context, j Job, log *logging.Entry, interval time.Duration, quitting *chan []byte, cfg *conf.Config) {
 	ticker := time.NewTicker(interval)
 	for {
 		select {
 		case <-ticker.C:
-			j(ctx, log, quitting)
+			j(ctx, log, quitting, cfg)
 		case <-ctx.Done():
 			s.wg.Done()
 			return
@@ -58,8 +60,8 @@ func (s *Scheduler) process(ctx context.Context, j Job, log *logging.Entry, inte
 	}
 }
 
-// Function used by dynamited packages to defer cleanup of their things 
-func Cleanup(pkg string, loggers []*logging.Logger, exit *chan []byte, worker *Scheduler){
+// Function used by dynamited packages to defer cleanup of their things
+func Cleanup(pkg string, loggers []*logging.Logger, exit *chan []byte, worker *Scheduler) {
 	for {
 		select {
 		case msg := <-*exit:
@@ -70,7 +72,7 @@ func Cleanup(pkg string, loggers []*logging.Logger, exit *chan []byte, worker *S
 					file.Close()
 				}
 			}
-			worker.Stop() 
+			worker.Stop()
 		}
 	}
 }

@@ -3,7 +3,7 @@ package watcher
 // monitor the Agent's health and performance
 
 import (
-	"dynamite_daemon_core/pkg/common"
+	"github.com/DynamiteAI/dynamite_daemon_core/pkg/common"
 	"errors"
 	"fmt"
 	"net"
